@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Emissões de CO2 em Pernambuco</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script
+      defer
+      src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"
+    ></script>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      href="{{ url_for('static', filename='favicon-96x96.png') }}"
+      sizes="96x96"
+    />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="{{ url_for('static', filename='favicon.svg') }}"
+    />
+    <link
+      rel="shortcut icon"
+      href="{{ url_for('static', filename='favicon.ico') }}"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="{{ url_for('static', filename='apple-touch-icon.png') }}"
+    />
+    <link
+      rel="manifest"
+      href="{{ url_for('static', filename='site.webmanifest') }}"
+    />
+  </head>
+  <body>
+    <div class="container" x-data="dashboard()" x-init="updatePlot()">
+      <h1>Indicadores de Emissão de CO2 em Pernambuco</h1>
+
+      <!-- Filters -->
+      <form class="filters">
+        <div class="filter-group">
+          <label>Setores:</label>
+          <template x-for="sector in sectors" :key="sector">
+            <div>
+              <input
+                type="checkbox"
+                :id="sector"
+                :value="sector"
+                x-model="selectedSectors"
+              />
+              <label :for="sector" x-text="sector"></label>
+            </div>
+          </template>
+        </div>
+
+        <div class="filter-group">
+          <label>Anos:</label>
+          de
+          <input type="number" x-model.number="startYear" :min="minYear" />
+          até
+          <input type="number" x-model.number="endYear" :max="maxYear" />
+        </div>
+
+        <button type="button" @click="updatePlot">Update</button>
+      </form>
+
+      <!-- Plot Container -->
+      <div id="plot"></div>
+    </div>
+
+    <script>
+        function dashboard() {
+          return {
+              sectors: {{ sectors|tojson }},
+              selectedSectors: {{ selected_sectors|tojson }},
+              startYear: {{ start_year }},
+              endYear: {{ end_year }},
+              minYear: {{ min_year }},
+              maxYear: {{ max_year }},
+
+              async updatePlot() {
+                // Clear previous plot if exists
+                const container = document.getElementById('plot');
+                if (container) {
+                    Plotly.purge(container);
+                }
+
+                try {
+                    const response = await fetch(
+                        `/api/emissions?sectors=${this.selectedSectors}&start_year=${this.startYear}&end_year=${this.endYear}`
+                    );
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const graphData = await response.json();
+
+                    if (container) {
+                        Plotly.newPlot('plot', graphData.data, graphData.layout, {
+                            responsive: true
+                        });
+                    }
+                } catch (error) {
+                    console.error("Error loading plot:", error);
+                }
+              },
+              watch: {
+                selectedSectors() { this.updatePlot() },
+                startYear() { this.updatePlot() },
+                endYear() { this.updatePlot() }
+              }
+          }
+      }
+    </script>
+  </body>
+</html>
