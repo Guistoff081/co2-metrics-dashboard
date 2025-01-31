@@ -12,7 +12,8 @@ A Flask-based dashboard analyzing CO2 emissions in Pernambuco, Brazil. Created f
 
 ## Tech Stack
 
-- Python 3.9
-- Flask 2.0
-- Pandas 1.3
-- Plotly 5.4
+- Python 3.13
+- Flask 3.0
+- Pandas 2.2
+- Plotly 6.0
+- AlpineJS 3
